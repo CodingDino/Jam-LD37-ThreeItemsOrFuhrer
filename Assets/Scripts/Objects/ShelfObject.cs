@@ -5,13 +5,19 @@ using UnityEngine;
 public class ShelfObject : MonoBehaviour 
 {
 	[SerializeField]
-	private List<Transform> m_productSlots;
-	[SerializeField]
-	private List<ProductObject> m_productStock;
+	private List<Transform> m_productSlots = new List<Transform>();
 	[SerializeField]
 	private ProductObject m_productPrototype;
 
 	private string m_productID;
+	private List<ProductObject> m_productStock = new List<ProductObject>();
+
+	public string productID { get { return m_productID; }}
+
+	// Use this for initialization
+	void Start () {
+		AddOrRemoveStock(m_productSlots.Count); // FULLY STOCK AT START
+	}
 
 	public void SetupForProduct(string _productID)
 	{
