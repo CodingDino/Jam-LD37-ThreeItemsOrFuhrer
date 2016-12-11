@@ -6,15 +6,15 @@ public class ProductObject : MonoBehaviour
 {
 	private string m_productID;
 
-	[SerializeField]
-	private string m_modelPath;
-	[SerializeField]
-	private MeshFilter m_mesh;
-
-	public void SetupForProduct(string _productID)
+	public static ProductObject Create(string _productID)
 	{
-		m_productID = _productID;
+		if (!ProductDatabase.IsInitialised())
+			ProductDatabase.Initialise();
 		ProductDefinition productDef = ProductDatabase.GetData(_productID);
-		m_mesh.mesh = Instantiate(Resources.Load(m_modelPath+productDef.modelName)) as Mesh;
+		GameObject newObject = Instantiate(Resources.Load("Products/Models/"+productDef.modelName)) as GameObject;
+		newObject.AddComponent<ProductObject>();
+		ProductObject newProduct = newObject.GetComponent<ProductObject>();
+		newProduct.m_productID = _productID;
+		return newProduct;
 	}
 }

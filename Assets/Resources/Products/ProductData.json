@@ -2,15 +2,18 @@
 	"data"	:	[
 		{
 			"id"			:	"PR-Banana",
-			"displayName"	:	"Oblong Yellow Berry"
+			"displayName"	:	"Oblong Yellow Berry",
+			"modelName"		: 	"PR-Banana"
 		},
 		{
 			"id"			:	"PR-Cauliflower",
-			"displayName"	:	"Ivory Crunch Fluff"
+			"displayName"	:	"Ivory Crunch Fluff",
+			"modelName"		: 	"PR-Cauliflower"
 		},
 		{
 			"id"			:	"PR-Cheese",
-			"displayName"	:	"Coagulated Cow Protein"
+			"displayName"	:	"Coagulated Cow Protein",
+			"modelName"		: 	"PR-Cheese"
 		}
 	]
 }

@@ -24,27 +24,38 @@ public class CustomerObject : MonoBehaviour
 	[SerializeField]
 	private List<Transform> m_productSlots = new List<Transform>();
 	[SerializeField]
-	private ProductObject m_productPrototype;
+	private Entity m_entity;
 
 	private List<string> m_targetItems = new List<string>();
 	private List<string> m_pendingItems = new List<string>();
 	private List<ProductObject> m_productInventory = new List<ProductObject>();
 	private CustomerState m_state;
 	private float m_loiteringStartTime;
-	private Entity m_entity;
 	private string m_currentTargetItem;
 
 	// SHARED DATA
-	private static List<ShelfObject> s_shelves;
-	private static Transform s_door;
-	private static Transform s_register;
+	// TODO: Make static and set up
+	[SerializeField]
+	private List<ShelfObject> s_shelves;
+	[SerializeField]
+	private Transform s_door;
+	[SerializeField]
+	private RegisterObject s_register;
+	[SerializeField]
+	private CustomerQueueObject s_queue;
 
 	public static void SetCustomerSharedData()
 	{
 		// TODO: POPULATE SHARED DATA
 	}
 
-	public void SetupCustomer(List<string> _productsInStock)
+	void Start()
+	{
+		ChangeState(CustomerState.ENTERING);
+		SetupCustomer();
+	}
+
+	public void SetupCustomer()
 	{
 		// Determine how many items a customer wants
 		int numItems = Random.Range(1,MAX_INVENTORY_ITEMS);
@@ -52,10 +63,10 @@ public class CustomerObject : MonoBehaviour
 		// Generate items in stock
 		for (int i = 0; i < numItems; ++i)
 		{
-			int itemIndex = Random.Range(0,_productsInStock.Count);
-			m_targetItems.Add(_productsInStock[itemIndex]);
+			int itemIndex = Random.Range(0,s_shelves.Count);
+			m_targetItems.Add(s_shelves[itemIndex].productID);
+			m_pendingItems.Add(s_shelves[itemIndex].productID);
 		}
-		m_pendingItems = m_targetItems;
 
 		// TODO: Generate vouchers based on active rules
 		// TODO: Determine if customer should be failed or not
@@ -64,7 +75,7 @@ public class CustomerObject : MonoBehaviour
 
 	public void AddItemToInventory(string _sItemID)
 	{
-		ProductObject newObject = Instantiate(m_productPrototype.gameObject).GetComponent<ProductObject>();
+		ProductObject newObject = ProductObject.Create(_sItemID);
 		newObject.transform.SetParent(transform);
 		newObject.transform.position = m_productSlots[m_productInventory.Count].transform.position;
 		m_productInventory.Add(newObject);
@@ -78,6 +89,7 @@ public class CustomerObject : MonoBehaviour
 
 	private void ChangeState(CustomerState _newState)
 	{
+		m_state = _newState;
 		switch(m_state)
 		{
 		case CustomerState.ENTERING:
@@ -88,7 +100,7 @@ public class CustomerObject : MonoBehaviour
 			}
 		case CustomerState.GATHERING_ITEM:
 			{
-				int randomItem = Random.Range(0,m_pendingItems.Count);
+				int randomItem = Random.Range(0,m_pendingItems.Count-1);
 				m_currentTargetItem = m_pendingItems[randomItem];
 				ShelfObject targetShelf = null;
 				for (int i = 0; i < s_shelves.Count; ++i)
@@ -114,16 +126,20 @@ public class CustomerObject : MonoBehaviour
 			}
 		case CustomerState.QUEUEING:
 			{
-				// TODO: Move to place in Queue.
+				// Move to place in Queue.
+				Vector3 target = s_queue.EnterQueue(this);
+				m_entity.MoveToTarget(target);
 				break;
 			}
 		case CustomerState.CHECKING_OUT:
 			{
-				// TODO: Interact with clerk
+				// Interact with clerk
+				s_register.currentCustomer = this;
 				break;
 			}
 		case CustomerState.LEAVING:
 			{
+				s_queue.LeaveQueue(this);
 				Vector3 exitTarget = new Vector3(s_door.transform.position.x - SAFE_ZONE, transform.position.y, transform.position.z);
 				m_entity.MoveToTarget(exitTarget);
 				break;
@@ -168,8 +184,10 @@ public class CustomerObject : MonoBehaviour
 
 					if (ShouldLoiter())
 						ChangeState(CustomerState.LOITERING);
-					else 
+					else if (m_pendingItems.Count > 0)
 						ChangeState(CustomerState.GATHERING_ITEM);
+					else
+						ChangeState(CustomerState.QUEUEING);
 				}
 				break;
 			}
@@ -179,7 +197,7 @@ public class CustomerObject : MonoBehaviour
 				{
 					if (ShouldLoiter())
 						ChangeState(CustomerState.LOITERING);
-					else if (m_targetItems.Count > m_productInventory.Count)
+					else if (m_pendingItems.Count > 0)
 						ChangeState(CustomerState.GATHERING_ITEM);
 					else
 						ChangeState(CustomerState.QUEUEING);
@@ -188,13 +206,19 @@ public class CustomerObject : MonoBehaviour
 			}
 		case CustomerState.QUEUEING:
 			{
-				// TODO: Move to place in Queue.
-				// TODO: If in front of queue, move to checking out state
+				// If in front of queue, move to checking out state
+				if (!m_entity.isMoving && s_queue.IsAtFrotOfQueue(this))
+				{
+					ChangeState(CustomerState.CHECKING_OUT);
+				}
 				break;
 			}
 		case CustomerState.CHECKING_OUT:
 			{
-				// TODO: Interact with clerk
+				if (s_register.currentCustomer != this)
+				{
+					ChangeState(CustomerState.LEAVING);
+				}
 				break;
 			}
 		case CustomerState.LEAVING:

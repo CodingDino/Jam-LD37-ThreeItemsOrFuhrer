@@ -5,11 +5,10 @@ using UnityEngine;
 public class ShelfObject : MonoBehaviour 
 {
 	[SerializeField]
-	private List<Transform> m_productSlots = new List<Transform>();
-	[SerializeField]
-	private ProductObject m_productPrototype;
-
 	private string m_productID;
+	[SerializeField]
+	private List<Transform> m_productSlots = new List<Transform>();
+
 	private List<ProductObject> m_productStock = new List<ProductObject>();
 
 	public string productID { get { return m_productID; }}
@@ -23,11 +22,10 @@ public class ShelfObject : MonoBehaviour
 	{
 		m_productID = _productID;
 
-		//: Update ProductObjects in inventory
-		for (int i = 0; i < m_productStock.Count; ++i)
-		{
-			m_productStock[i].SetupForProduct(_productID);
-		}
+		// Update ProductObjects in inventory
+		int numItems = m_productStock.Count;
+		AddOrRemoveStock(-numItems);
+		AddOrRemoveStock(numItems);
 
 		// TODO: Update sign
 	}
@@ -45,7 +43,7 @@ public class ShelfObject : MonoBehaviour
 					return;
 				}
 
-				ProductObject newObject = Instantiate(m_productPrototype.gameObject).GetComponent<ProductObject>();
+				ProductObject newObject = ProductObject.Create(m_productID);
 				newObject.transform.SetParent(transform);
 				newObject.transform.position = m_productSlots[m_productStock.Count].transform.position;
 				m_productStock.Add(newObject);
