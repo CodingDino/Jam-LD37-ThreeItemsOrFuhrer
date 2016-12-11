@@ -27,7 +27,7 @@ public class InteractableObject : MonoBehaviour
 	[SerializeField]
 	private float m_interactionRadius = 3.0f;
 	[SerializeField]
-	public UnityEvent m_onInteract = null;
+	private UnityEvent m_onInteract = null;
 
 	// ********************************************************************
 
@@ -49,7 +49,7 @@ public class InteractableObject : MonoBehaviour
 		if (m_onInteract == null)
 			return;
 		
-		if (!m_buttonInteract.NullOrEmpty() && Input.GetKeyDown(m_buttonInteract))
+		if (!m_buttonInteract.NullOrEmpty() && Input.GetButtonDown(m_buttonInteract))
 		{
 			TryInteract();
 		}
@@ -59,15 +59,20 @@ public class InteractableObject : MonoBehaviour
 
 	private bool TryInteract()
 	{
+		Debug.Log("TryInteract");
 		bool objectNear = false;
 		if (m_requireNearbyObject != null)
 			objectNear = (m_requireNearbyObject.transform.position - transform.position).magnitude <= m_interactionRadius;
 
 		if (m_requireNearbyObject == null || objectNear)
 		{
+			Debug.Log("Invoking!");
+
 			m_onInteract.Invoke();
 			return true;
 		}
+
+		Debug.Log("Not close enough");
 
 		return false;
 	}

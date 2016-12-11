@@ -11,6 +11,19 @@ public class CustomerQueueObject : MonoBehaviour {
 
 	private List<CustomerObject> m_customerQueue = new List<CustomerObject>();
 
+	public bool Empty()
+	{
+		return m_customerQueue.Count == 0;
+	}
+
+	public bool IsCustomerAtFrontOfQueue()
+	{
+		if (m_customerQueue.Count > 0)
+			return m_customerQueue[0].transform.position.x == m_queueFront.position.x;
+		else
+			return false;
+	}
+
 	public Vector2 EnterQueue(CustomerObject _customer)
 	{
 		m_customerQueue.Add(_customer);
